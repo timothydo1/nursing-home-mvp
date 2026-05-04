@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Task = {
   id: number;
@@ -194,6 +204,20 @@ function getInitialIncidents(): Incident[] {
   }
 }
 
+function getInitialHowToExpanded() {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  const savedValue = window.localStorage.getItem("howToExpanded");
+
+  if (savedValue === null) {
+    return true;
+  }
+
+  return savedValue === "true";
+}
+
 export default function Home() {
   const residents = [
     { id: 1, name: "John Smith", room: "101" },
@@ -210,6 +234,7 @@ export default function Home() {
   const [incidents, setIncidents] = useState<Incident[]>(getInitialIncidents);
   const [activeIncidentId, setActiveIncidentId] = useState<number | null>(1001);
   const [now, setNow] = useState(() => Date.now());
+  const [howToExpanded, setHowToExpanded] = useState(getInitialHowToExpanded);
   const [answers, setAnswers] = useState({
     category: "",
     q2: "",
@@ -232,16 +257,23 @@ export default function Home() {
     ...buttonStyle,
     backgroundColor: "#e5e7eb",
   } as const;
+  const navyButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: "#2c5bc9",
+    color: "white",
+  } as const;
+  const navyButtonClass = "!bg-[#2c5bc9] hover:!bg-[#244cab] !text-white disabled:!bg-[#2c5bc9] disabled:!text-white";
   const panelStyle = {
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    padding: 14,
+    border: "none",
+    borderRadius: 4,
+    padding: 16,
     marginBottom: 16,
-    backgroundColor: "#fafafa",
+    backgroundColor: "#f8f9fa",
+    boxShadow: "0 1px 4px rgba(15, 23, 42, 0.08)",
   } as const;
   const cardStyle = {
-    border: "1px solid #ddd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 4,
     padding: 8,
     marginBottom: 6,
     backgroundColor: "white",
@@ -253,8 +285,8 @@ export default function Home() {
   } as const;
   const residentSelectStyle = {
     ...selectStyle,
-    backgroundColor: "#d1d5db",
-    border: "1px solid #6b7280",
+    backgroundColor: "#e0e3e8",
+    border: "1px solid #9ca3af",
     borderRadius: 4,
   } as const;
   const questionStyle = {
@@ -262,6 +294,7 @@ export default function Home() {
     paddingTop: 12,
     marginBottom: 14,
   } as const;
+  const dashboardGridColumns = "140px 180px 125px 115px 175px 120px";
   const sortedIncidents = [...incidents].sort((a, b) => {
     const aIsClosed = a.tasks.length > 0 && a.tasks.every((task) => task.completed);
     const bIsClosed = b.tasks.length > 0 && b.tasks.every((task) => task.completed);
@@ -297,6 +330,10 @@ export default function Home() {
     window.localStorage.setItem("nursingHomeIncidents", JSON.stringify(incidents));
   }, [incidents]);
 
+  useEffect(() => {
+    window.localStorage.setItem("howToExpanded", String(howToExpanded));
+  }, [howToExpanded]);
+
   function formatTimeRemaining(ms: number) {
     const totalMinutes = Math.max(0, Math.ceil(ms / 60000));
     const days = Math.floor(totalMinutes / (24 * 60));
@@ -307,7 +344,13 @@ export default function Home() {
   }
 
   function formatIncidentDate(timestamp: number) {
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   function formatClosedDate(timestamp: number) {
@@ -322,10 +365,14 @@ export default function Home() {
     return new Date(timestamp).toLocaleString("en-GB", {
       day: "2-digit",
       month: "2-digit",
-      year: "2-digit",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
+  }
+
+  function formatIncidentReference(incidentId: number) {
+    return `FALL-${incidentId}`;
   }
 
   function getResidentName(residentId: number) {
@@ -369,8 +416,10 @@ export default function Home() {
     }
 
     const createdAt = Date.now();
+    const nextIncidentId =
+      incidents.length > 0 ? Math.max(...incidents.map((incident) => incident.id)) + 1 : 1001;
     const newIncident: Incident = {
-      id: createdAt,
+      id: nextIncidentId,
       residentId: Number(selectedResidentId),
       createdAt,
       decisionSummary: {
@@ -517,7 +566,7 @@ export default function Home() {
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: "Arial, sans-serif", backgroundColor: "#f9fafb" }}>
+    <main style={{ padding: 24, fontFamily: "Arial, sans-serif", backgroundColor: "#f7f3ed" }}>
       <div
         style={{
           display: "flex",
@@ -527,30 +576,51 @@ export default function Home() {
           marginBottom: 12,
         }}
       >
-        <h1 style={{ margin: 0 }}>Nursing Home Incident MVP</h1>
-        <button style={greyButtonStyle} onClick={resetData}>
+        <div>
+          <h1 style={{ margin: 0 }}>Grandma & Grandpa Care</h1>
+          <p style={{ margin: "4px 0 0 0", color: "#555" }}>
+            Fall incident workflow prototype
+          </p>
+        </div>
+        <Button variant="secondary" style={greyButtonStyle} onClick={resetData}>
           Reset Data
-        </button>
+        </Button>
       </div>
 
-      <div
+      <Card
         style={{
-          backgroundColor: "#f5f5f5",
-          border: "1px solid #ddd",
-          borderRadius: 6,
-          padding: 12,
-          marginBottom: 16,
+          ...panelStyle,
         }}
       >
-        <strong>How to use</strong>
-        <ul style={{ marginBottom: 0, marginTop: 8 }}>
-          <li>Select a resident and start a new fall incident.</li>
-          <li>Answer the questions to generate required conditional actions.</li>
-          <li>Assign actions to staff.</li>
-          <li>Mark actions as complete.</li>
-          <li>Use the dashboard to track open and overdue incidents.</li>
-        </ul>
-      </div>
+        <CardHeader
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <CardTitle>How to use</CardTitle>
+          <Button
+            variant="secondary"
+            style={{ ...greyButtonStyle, width: 36, padding: "6px 0" }}
+            onClick={() => setHowToExpanded(!howToExpanded)}
+          >
+            {howToExpanded ? "-" : "+"}
+          </Button>
+        </CardHeader>
+        {howToExpanded && (
+          <CardContent>
+            <ul style={{ marginBottom: 0, marginTop: 0, paddingLeft: 22, lineHeight: 1.6 }}>
+              <li>Select a resident and start a new fall incident.</li>
+              <li>Answer the questions to generate required conditional actions.</li>
+              <li>Assign actions to staff.</li>
+              <li>Mark actions as complete.</li>
+              <li>Use the dashboard to track open and overdue incidents.</li>
+            </ul>
+          </CardContent>
+        )}
+      </Card>
 
       <div
         style={{
@@ -560,56 +630,56 @@ export default function Home() {
           alignItems: "start",
         }}
       >
-        <section
+        <Card
           style={{
             ...panelStyle,
             flex: "1 1 420px",
-            backgroundColor: "#f3f4f6",
-            border: "1px solid #9ca3af",
-            boxShadow: "0 1px 4px rgba(0, 0, 0, 0.12)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>Start New Fall Workflow</h2>
-
-          {!showQuestions && (
-            <div style={{ marginBottom: 16 }}>
-              <select
+          <CardHeader>
+            <CardTitle>Start New Fall Workflow</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!showQuestions && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <Select
                 value={selectedResidentId}
-                onChange={(event) => setSelectedResidentId(event.target.value)}
-                style={residentSelectStyle}
+                onValueChange={setSelectedResidentId}
               >
-                <option value="">Select resident</option>
-                {residents.map((resident) => (
-                  <option key={resident.id} value={resident.id}>
-                    {resident.name} - Room {resident.room}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger style={{ ...residentSelectStyle, minWidth: 230 }}>
+                  <SelectValue placeholder="Select resident" />
+                </SelectTrigger>
+                <SelectContent>
+                  {residents.map((resident) => (
+                    <SelectItem key={resident.id} value={String(resident.id)}>
+                      {resident.name} - Room {resident.room}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <button
+              <Button
                 onClick={startFallWorkflow}
                 disabled={selectedResidentId === ""}
-                style={{
-                  ...buttonStyle,
-                  opacity: selectedResidentId === "" ? 0.5 : 1,
-                }}
+                className={navyButtonClass}
+                style={navyButtonStyle}
               >
                 New Incident
-              </button>
+              </Button>
             </div>
-          )}
+            )}
 
-          {showQuestions && activeIncident && (
+            {showQuestions && activeIncident && (
             <div>
               <h2>Decision Questions</h2>
               <p style={{ fontWeight: "bold" }}>{getResidentName(activeIncident.residentId)}</p>
 
               <div style={questionStyle}>
                 <p>1) Select incident category</p>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 1")}>Category 1</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 2")}>Category 2</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 3")}>Category 3</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 4")}>Category 4</button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 1")}>Category 1</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 2")}>Category 2</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 3")}>Category 3</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 4")}>Category 4</Button>
                 {answers.category !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.category}
@@ -621,8 +691,8 @@ export default function Home() {
                 <p>
                   2) Was there a head strike, suspected head injury, unwitnessed fall or is the resident on anticoagulant or antiplatelet therapy?
                 </p>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q2", "yes")}>YES</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q2", "no")}>NO</button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q2", "yes")}>YES</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q2", "no")}>NO</Button>
                 {answers.q2 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q2 === "yes" ? "YES" : "NO"}
@@ -632,8 +702,8 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>3) Has this been logged in the incident management system?</p>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q3", "yes")}>YES</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q3", "no")}>NO</button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q3", "yes")}>YES</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q3", "no")}>NO</Button>
                 {answers.q3 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q3 === "yes" ? "YES" : "NO"}
@@ -643,8 +713,8 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>4) Is a care conference required?</p>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q4", "yes")}>YES</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q4", "no")}>NO</button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q4", "yes")}>YES</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q4", "no")}>NO</Button>
                 {answers.q4 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q4 === "yes" ? "YES" : "NO"}
@@ -654,8 +724,8 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>5) Is a wound assessment required?</p>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q5", "yes")}>YES</button>
-                <button style={greyButtonStyle} onClick={() => answerQuestion("q5", "no")}>NO</button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q5", "yes")}>YES</Button>
+                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q5", "no")}>NO</Button>
                 {answers.q5 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q5 === "yes" ? "YES" : "NO"}
@@ -663,7 +733,7 @@ export default function Home() {
                 )}
               </div>
 
-              <button
+              <Button
                 onClick={generateTasks}
                 disabled={
                   answers.category === "" ||
@@ -685,31 +755,54 @@ export default function Home() {
                 }}
               >
                 Generate Tasks
-              </button>
+              </Button>
             </div>
-          )}
-        </section>
+            )}
+          </CardContent>
+        </Card>
 
-        <section style={{ ...panelStyle, flex: "1 1 360px" }}>
-          <h2 style={{ marginTop: 0 }}>Incident Dashboard</h2>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              marginBottom: 12,
-              fontWeight: "bold",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>Total: {incidents.length}</div>
-            <div>Open: {openIncidentCount}</div>
-            <div style={{ color: attentionIncidentCount > 0 ? "red" : "green" }}>
-              Attention: {attentionIncidentCount}
+        <Card style={{ ...panelStyle, flex: "2 1 760px", overflow: "hidden" }}>
+          <CardHeader>
+            <CardTitle>Incident Dashboard</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                marginBottom: 12,
+                fontWeight: "bold",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>Total: {incidents.length}</div>
+              <div>Open: {openIncidentCount}</div>
+              <div style={{ color: attentionIncidentCount > 0 ? "red" : "green" }}>
+                Needs attention: {attentionIncidentCount}
+              </div>
             </div>
-          </div>
-          {incidents.length === 0 && <p>No incidents yet.</p>}
+            {incidents.length === 0 && <p>No incidents yet.</p>}
 
-          <div style={{ height: 320, overflowY: "auto", paddingRight: 4 }}>
+            <div style={{ height: 320, overflowY: "auto", overflowX: "hidden", paddingRight: 4 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: dashboardGridColumns,
+                columnGap: 12,
+                padding: "0 8px 6px 8px",
+                fontSize: 12,
+                fontWeight: "bold",
+                color: "#555",
+                minWidth: 855,
+              }}
+            >
+              <div>Name</div>
+              <div>Time</div>
+              <div>Completed</div>
+              <div>Status</div>
+              <div>Overdue</div>
+              <div>Action</div>
+            </div>
             {sortedIncidents.map((incident) => {
               const resident = residents.find((resident) => resident.id === incident.residentId);
               const completedTasks = incident.tasks.filter((task) => task.completed).length;
@@ -723,86 +816,134 @@ export default function Home() {
               const closedAt = Math.max(
                 ...incident.tasks.map((task) => task.completedAt ?? incident.createdAt)
               );
+              const isSelected = activeIncidentId === incident.id;
+              const incidentBorderColor = hasOverdueTasks
+                ? "#ef4444"
+                : isSelected
+                ? "#2c5bc9"
+                : "#ddd";
 
               return (
                 <div
                   key={incident.id}
                   style={{
                     ...cardStyle,
+                    boxSizing: "border-box",
                     backgroundColor: isClosed ? "#f3f4f6" : hasOverdueTasks ? "#fff1f2" : "white",
                     opacity: isClosed ? 0.75 : 1,
-                    borderColor: hasOverdueTasks
-                      ? "#ef4444"
-                      : activeIncidentId === incident.id
-                      ? "#2563eb"
-                      : "#ddd",
+                    border: `${isSelected ? 3 : 1}px solid ${incidentBorderColor}`,
+                    minWidth: 855,
                   }}
                 >
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1.1fr 1.6fr 1.1fr 1.3fr 1.2fr 120px",
-                      gap: 12,
+                      gridTemplateColumns: dashboardGridColumns,
+                      columnGap: 12,
                       alignItems: "center",
                       fontSize: 14,
                     }}
                   >
-                    <div style={{ fontWeight: "bold" }}>
-                      {resident?.name ?? "Unknown resident"}
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          color: "rgba(0, 0, 0, 0.8)",
+                          fontSize: 12,
+                          fontWeight: "normal",
+                          lineHeight: 1.2,
+                          marginBottom: 3,
+                        }}
+                      >
+                        {formatIncidentReference(incident.id)}
+                      </div>
+                      <div style={{ fontWeight: "bold", lineHeight: 1.2 }}>
+                        {resident?.name ?? "Unknown resident"}
+                      </div>
                     </div>
-                    <div>{formatIncidentDate(incident.createdAt)}</div>
-                    <div>{completedTasks}/{incident.tasks.length} completed</div>
-                    <div style={{ fontWeight: "bold" }}>
-                      {isClosed ? `Closed ${formatClosedDate(closedAt)}` : "Open"}
+                    <div style={{ minWidth: 0 }}>{formatIncidentDate(incident.createdAt)}</div>
+                    <div style={{ minWidth: 0 }}>{completedTasks}/{incident.tasks.length} completed</div>
+                    <div style={{ minWidth: 0 }}>
+                      <Badge
+                        variant={isClosed ? "secondary" : "default"}
+                        style={isClosed ? undefined : { backgroundColor: "#dcfce7", color: "#166534" }}
+                      >
+                        {isClosed ? `Closed ${formatClosedDate(closedAt)}` : "Open"}
+                      </Badge>
                     </div>
-                    <div
-                      style={{
-                        color: isClosed ? "#555" : hasOverdueTasks ? "red" : "green",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {isClosed
+                    <div style={{ minWidth: 0 }}>
+                      <Badge
+                        variant={hasOverdueTasks ? "destructive" : "secondary"}
+                        style={
+                          !hasOverdueTasks && !isClosed
+                            ? { backgroundColor: "#dcfce7", color: "#166534" }
+                            : undefined
+                        }
+                      >
+                        {isClosed
                         ? overdueBeforeCompletionCount > 0
                           ? `${overdueBeforeCompletionCount} tasks were overdue`
                           : "No overdue tasks"
                         : hasOverdueTasks
                         ? "Overdue tasks"
                         : "No overdue tasks"}
+                      </Badge>
                     </div>
-                    <button style={buttonStyle} onClick={() => setActiveIncidentId(incident.id)}>
+                    <Button
+                      className={navyButtonClass}
+                      style={{ ...navyButtonStyle, width: 110 }}
+                      onClick={() => setActiveIncidentId(incident.id)}
+                    >
                       View Tasks
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );
             })}
-          </div>
-        </section>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {activeIncident && activeIncident.tasks.length > 0 && (
-        <section style={{ ...panelStyle, marginTop: 24 }}>
-          <h2 style={{ marginTop: 0 }}>
-            Actions for {getResidentName(activeIncident.residentId)}{" "}
-            <span style={{ fontSize: 16, fontWeight: "normal" }}>
-              {formatIncidentDate(activeIncident.createdAt)}
-            </span>
-          </h2>
-          <div
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 6,
-              padding: 10,
-              marginBottom: 12,
-              backgroundColor: "white",
-              fontSize: 14,
-            }}
-          >
-            {activeIncident.decisionSummary.category || "Category not selected"} |{" "}
-            {activeIncident.decisionSummary.neuro || "No neuro obs required"} |{" "}
-            {activeIncident.decisionSummary.careConference || "Care conference not required"} |{" "}
-            {activeIncident.decisionSummary.wound || "Wound assessment not required"}
-          </div>
+        <Card style={{ ...panelStyle, marginTop: 24 }}>
+          <CardHeader>
+            <CardTitle>
+              <span
+                style={{
+                  backgroundColor: "#eef0f2",
+                  borderRadius: 4,
+                  color: "#6b7280",
+                  fontSize: 14,
+                  fontWeight: "normal",
+                  padding: "2px 6px",
+                  marginRight: 8,
+                }}
+              >
+                {formatIncidentReference(activeIncident.id)}
+              </span>
+              <span style={{ color: "#6b7280", marginRight: 8 }}>·</span>
+              {getResidentName(activeIncident.residentId)}
+            </CardTitle>
+            <div style={{ marginTop: 4, color: "#555" }}>
+              Incident date/time: {formatIncidentDate(activeIncident.createdAt)}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: 4,
+                padding: 10,
+                marginBottom: 12,
+                backgroundColor: "#ffffff",
+                fontSize: 14,
+              }}
+            >
+              {activeIncident.decisionSummary.category || "Category not selected"} |{" "}
+              {activeIncident.decisionSummary.neuro || "No neuro obs required"} |{" "}
+              {activeIncident.decisionSummary.careConference || "Care conference not required"} |{" "}
+              {activeIncident.decisionSummary.wound || "Wound assessment not required"}
+            </div>
           <div
             style={{
               display: "grid",
@@ -829,19 +970,19 @@ export default function Home() {
                   gridTemplateColumns: "minmax(260px, 2fr) minmax(180px, 1fr) minmax(220px, 1fr) 140px",
                   gap: 12,
                   alignItems: "center",
-                  border: "1px solid #eee",
-                  borderRadius: 6,
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 4,
                   padding: 10,
                   marginBottom: 8,
                   backgroundColor: task.completed
-                    ? "#f3f4f6"
+                    ? "#eef0f2"
                     : task.due <= now
                     ? "#fff1f2"
                     : "white",
                   lineHeight: 1.5,
                 }}
               >
-                <div>
+                <div style={{ opacity: task.completed ? 0.68 : 1 }}>
                   <div
                     style={{
                       color: !task.completed && task.due <= now ? "red" : "black",
@@ -851,11 +992,20 @@ export default function Home() {
                     {task.name}
                   </div>
                   <div style={{ fontSize: 14 }}>
-                    {task.completed ? "Done" : "Pending"}
+                    <Badge
+                      variant={task.completed ? "secondary" : "outline"}
+                      style={
+                        task.completed
+                          ? { backgroundColor: "#e5e7eb", color: "#4b5563" }
+                          : { backgroundColor: "#fef3c7", color: "#92400e" }
+                      }
+                    >
+                      {task.completed ? "Done" : "Pending"}
+                    </Badge>
                   </div>
                 </div>
 
-                <div>
+                <div style={{ opacity: task.completed ? 0.68 : 1 }}>
                   <select
                     value={task.assignedTo}
                     style={selectStyle}
@@ -877,6 +1027,7 @@ export default function Home() {
                   style={{
                     color: !task.completed && task.due <= now ? "red" : "black",
                     fontWeight: !task.completed && task.due <= now ? "bold" : "normal",
+                    opacity: task.completed ? 0.68 : 1,
                   }}
                 >
                   {task.completed ? (
@@ -893,16 +1044,18 @@ export default function Home() {
                   )}
                 </div>
 
-                <button
-                  style={task.completed ? greyButtonStyle : buttonStyle}
+                <Button
+                  className={task.completed ? undefined : navyButtonClass}
+                  style={task.completed ? greyButtonStyle : navyButtonStyle}
                   onClick={() => toggleTask(activeIncident.id, task.id, Date.now())}
                 >
                   {task.completed ? "Undo" : "Mark complete"}
-                </button>
+                </Button>
               </div>
             ))}
           </div>
-        </section>
+          </CardContent>
+        </Card>
       )}
     </main>
   );
