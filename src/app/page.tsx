@@ -2,7 +2,42 @@
 
 import { useState, useEffect } from "react";
 
-function createSeedIncidents() {
+type Task = {
+  id: number;
+  name: string;
+  completed: boolean;
+  due: number;
+  assignedTo: string;
+  completedAt: number | null;
+  wasOverdueWhenCompleted: boolean;
+};
+
+type Incident = {
+  id: number;
+  residentId: number;
+  createdAt: number;
+  decisionSummary: {
+    category: string;
+    neuro: string;
+    careConference: string;
+    wound: string;
+  };
+  tasks: Task[];
+};
+
+function normalizeTask(task: Partial<Task>): Task {
+  return {
+    id: task.id ?? 0,
+    name: task.name ?? "",
+    completed: task.completed ?? false,
+    due: task.due ?? Date.now(),
+    assignedTo: task.assignedTo ?? "",
+    completedAt: task.completedAt ?? null,
+    wasOverdueWhenCompleted: task.wasOverdueWhenCompleted ?? false,
+  };
+}
+
+function createSeedIncidents(): Incident[] {
   const now = Date.now();
   const hour = 60 * 60 * 1000;
   const day = 24 * hour;
@@ -114,17 +149,13 @@ function createSeedIncidents() {
     },
   ];
 
-  return incidents.map((incident) => ({
+  return incidents.map((incident): Incident => ({
     ...incident,
-    tasks: incident.tasks.map((task) => ({
-      ...task,
-      completedAt: task.completedAt ?? null,
-      wasOverdueWhenCompleted: task.wasOverdueWhenCompleted ?? false,
-    })),
+    tasks: incident.tasks.map((task) => normalizeTask(task)),
   }));
 }
 
-function getInitialIncidents() {
+function getInitialIncidents(): Incident[] {
   if (typeof window === "undefined") {
     return createSeedIncidents();
   }
@@ -136,14 +167,18 @@ function getInitialIncidents() {
   }
 
   try {
-    const parsedIncidents = JSON.parse(savedIncidents);
+    const parsedIncidents = JSON.parse(savedIncidents) as (Partial<Omit<Incident, "tasks">> & {
+      tasks?: Partial<Task>[];
+    })[];
 
     if (!Array.isArray(parsedIncidents)) {
       return createSeedIncidents();
     }
 
-    return parsedIncidents.map((incident) => ({
-      ...incident,
+    return parsedIncidents.map((incident, index): Incident => ({
+      id: incident.id ?? Date.now() + index,
+      residentId: incident.residentId ?? 1,
+      createdAt: incident.createdAt ?? Date.now(),
       decisionSummary: incident.decisionSummary ?? {
         category: "",
         neuro: "",
@@ -151,11 +186,7 @@ function getInitialIncidents() {
         wound: "",
       },
       tasks: Array.isArray(incident.tasks)
-        ? incident.tasks.map((task) => ({
-            ...task,
-            completedAt: task.completedAt ?? null,
-            wasOverdueWhenCompleted: task.wasOverdueWhenCompleted ?? false,
-          }))
+        ? incident.tasks.map((task) => normalizeTask(task))
         : [],
     }));
   } catch {
@@ -176,7 +207,7 @@ export default function Home() {
 
   const [selectedResidentId, setSelectedResidentId] = useState("");
   const [showQuestions, setShowQuestions] = useState(false);
-  const [incidents, setIncidents] = useState(getInitialIncidents);
+  const [incidents, setIncidents] = useState<Incident[]>(getInitialIncidents);
   const [activeIncidentId, setActiveIncidentId] = useState<number | null>(1001);
   const [now, setNow] = useState(() => Date.now());
   const [answers, setAnswers] = useState({
@@ -325,7 +356,7 @@ export default function Home() {
     }
 
     const createdAt = Date.now();
-    const newIncident = {
+    const newIncident: Incident = {
       id: createdAt,
       residentId: Number(selectedResidentId),
       createdAt,
@@ -347,9 +378,7 @@ export default function Home() {
 
   function updateIncidentTasks(
     incidentId: number,
-    updateTasks: (
-      tasks: { id: number; name: string; completed: boolean; due: number; assignedTo: string; completedAt: number | null; wasOverdueWhenCompleted: boolean }[]
-    ) => { id: number; name: string; completed: boolean; due: number; assignedTo: string; completedAt: number | null; wasOverdueWhenCompleted: boolean }[]
+    updateTasks: (tasks: Task[]) => Task[]
   ) {
     setIncidents(
       incidents.map((incident) =>
@@ -395,13 +424,13 @@ export default function Home() {
       wound: answers.q5 === "yes" ? "Wound assessment required" : "Wound assessment not required",
     };
 
-    const newTasks = [
-      { id: 1, name: "Action: Falls risk assessment tool completed.", completed: false, due: now + 24 * 60 * 60 * 1000 },
-      { id: 2, name: "Action: Notify doctor", completed: false, due: now + 24 * 60 * 60 * 1000 },
-      { id: 3, name: "Action: Pain chart for 3 days", completed: false, due: now + 72 * 60 * 60 * 1000 },
-      { id: 4, name: "Action: Complete Delirium Screen Tool (4AT)", completed: false, due: now + 48 * 60 * 60 * 1000 },
-      { id: 5, name: "Action: Write down a progress note per shift for 3 days", completed: false, due: now + 72 * 60 * 60 * 1000 },
-      {
+    const newTasks: Task[] = [
+      normalizeTask({ id: 1, name: "Action: Falls risk assessment tool completed.", completed: false, due: now + 24 * 60 * 60 * 1000 }),
+      normalizeTask({ id: 2, name: "Action: Notify doctor", completed: false, due: now + 24 * 60 * 60 * 1000 }),
+      normalizeTask({ id: 3, name: "Action: Pain chart for 3 days", completed: false, due: now + 72 * 60 * 60 * 1000 }),
+      normalizeTask({ id: 4, name: "Action: Complete Delirium Screen Tool (4AT)", completed: false, due: now + 48 * 60 * 60 * 1000 }),
+      normalizeTask({ id: 5, name: "Action: Write down a progress note per shift for 3 days", completed: false, due: now + 72 * 60 * 60 * 1000 }),
+      normalizeTask({
         id: 6,
         name: "Action: Notification to family",
         completed: false,
@@ -409,71 +438,64 @@ export default function Home() {
           answers.category === "Category 1" || answers.category === "Category 2"
             ? now
             : now + 8 * 60 * 60 * 1000,
-      },
+      }),
     ];
 
     let nextId = 7;
 
     if (answers.category === "Category 1") {
-      newTasks.push({
+      newTasks.push(normalizeTask({
         id: nextId,
         name: "Action: Notification to Aged Care Quality and Safety Commission",
         completed: false,
         due: now + 24 * 60 * 60 * 1000,
-      });
+      }));
       nextId++;
     }
 
     if (answers.category === "Category 2") {
-      newTasks.push({
+      newTasks.push(normalizeTask({
         id: nextId,
         name: "Action: Notification to Aged Care Quality and Safety Commission",
         completed: false,
         due: now + 30 * 24 * 60 * 60 * 1000,
-      });
+      }));
       nextId++;
     }
 
     if (answers.q2 === "yes") {
-      newTasks.push({
+      newTasks.push(normalizeTask({
         id: nextId,
         name: "Action: Neuro observations for 72 hours",
         completed: false,
         due: now + 72 * 60 * 60 * 1000,
-      });
+      }));
       nextId++;
     }
 
     if (answers.q4 === "yes") {
-      newTasks.push({
+      newTasks.push(normalizeTask({
         id: nextId,
         name: "Action: Conduct Care Conference",
         completed: false,
         due: now + 72 * 60 * 60 * 1000,
-      });
+      }));
       nextId++;
     }
 
     if (answers.q5 === "yes") {
-      newTasks.push({
+      newTasks.push(normalizeTask({
         id: nextId,
         name: "Action: Complete wound assessment",
         completed: false,
         due: now + 48 * 60 * 60 * 1000,
-      });
+      }));
     }
-
-    const tasksWithAssignees = newTasks.map((task) => ({
-      ...task,
-      assignedTo: "",
-      completedAt: null,
-      wasOverdueWhenCompleted: false,
-    }));
 
     setIncidents(
       incidents.map((incident) =>
         incident.id === activeIncidentId
-          ? { ...incident, decisionSummary, tasks: tasksWithAssignees }
+          ? { ...incident, decisionSummary, tasks: newTasks }
           : incident
       )
     );
