@@ -343,6 +343,19 @@ export default function Home() {
     });
   }
 
+  function resetData() {
+    window.localStorage.removeItem("incidents");
+    window.localStorage.removeItem("nursingHomeIncidents");
+
+    const seedIncidents = createSeedIncidents();
+    setIncidents(seedIncidents);
+    setActiveIncidentId(seedIncidents[0]?.id ?? null);
+    setSelectedResidentId("");
+    setShowQuestions(false);
+    resetAnswers();
+    setNow(Date.now());
+  }
+
   function answerQuestion(question: string, answer: string) {
     setAnswers({
       ...answers,
@@ -505,7 +518,39 @@ export default function Home() {
 
   return (
     <main style={{ padding: 24, fontFamily: "Arial, sans-serif", backgroundColor: "#f9fafb" }}>
-      <h1 style={{ marginBottom: 24 }}>Nursing Home Incident MVP</h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+          marginBottom: 12,
+        }}
+      >
+        <h1 style={{ margin: 0 }}>Nursing Home Incident MVP</h1>
+        <button style={greyButtonStyle} onClick={resetData}>
+          Reset Data
+        </button>
+      </div>
+
+      <div
+        style={{
+          backgroundColor: "#f5f5f5",
+          border: "1px solid #ddd",
+          borderRadius: 6,
+          padding: 12,
+          marginBottom: 16,
+        }}
+      >
+        <strong>How to use</strong>
+        <ul style={{ marginBottom: 0, marginTop: 8 }}>
+          <li>Select a resident and start a new fall incident.</li>
+          <li>Answer the questions to generate required conditional actions.</li>
+          <li>Assign actions to staff.</li>
+          <li>Mark actions as complete.</li>
+          <li>Use the dashboard to track open and overdue incidents.</li>
+        </ul>
+      </div>
 
       <div
         style={{
