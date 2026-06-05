@@ -211,7 +211,7 @@ function getInitialHowToExpanded() {
   const savedValue = window.localStorage.getItem("howToExpanded");
 
   if (savedValue === null) {
-    return true;
+    return !window.matchMedia("(max-width: 900px)").matches;
   }
 
   return savedValue === "true";
@@ -606,31 +606,62 @@ export default function Home() {
 
         @media (max-width: 900px) {
           .app-page {
-            padding: 14px !important;
+            padding: 10px !important;
+            line-height: 1.35;
           }
 
           .page-header {
             align-items: flex-start !important;
             flex-direction: column !important;
+            gap: 8px !important;
+            margin-bottom: 8px !important;
+          }
+
+          .page-header h1 {
+            font-size: 24px;
+            line-height: 1.15;
           }
 
           .app-layout {
             flex-direction: column !important;
             flex-wrap: nowrap !important;
-            gap: 14px !important;
+            gap: 8px !important;
           }
 
+          .how-to-card,
           .workflow-card,
           .dashboard-card,
           .actions-card {
             width: 100% !important;
             flex: 1 1 auto !important;
             min-width: 0 !important;
+            padding: 8px !important;
+            margin-bottom: 8px !important;
+            gap: 8px !important;
+          }
+
+          .actions-card {
+            margin-top: 8px !important;
+          }
+
+          .how-to-card [data-slot="card-header"],
+          .workflow-card [data-slot="card-header"],
+          .dashboard-card [data-slot="card-header"],
+          .actions-card [data-slot="card-header"] {
+            padding: 0 4px !important;
+          }
+
+          .how-to-card [data-slot="card-content"],
+          .workflow-card [data-slot="card-content"],
+          .dashboard-card [data-slot="card-content"],
+          .actions-card [data-slot="card-content"] {
+            padding: 0 4px !important;
           }
 
           .workflow-start-row {
             align-items: stretch !important;
             flex-direction: column !important;
+            gap: 6px !important;
           }
 
           .resident-select-trigger,
@@ -645,7 +676,7 @@ export default function Home() {
           .mobile-resident-select {
             display: block !important;
             width: 100% !important;
-            min-height: 42px !important;
+            min-height: 38px !important;
           }
 
           .dashboard-scroll {
@@ -661,16 +692,59 @@ export default function Home() {
           .dashboard-incident-card {
             min-width: 0 !important;
             width: 100% !important;
+            padding: 7px !important;
+            margin-bottom: 4px !important;
           }
 
           .dashboard-incident-grid {
-            grid-template-columns: 1fr !important;
-            row-gap: 8px !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            grid-template-areas:
+              "name time"
+              "status overdue"
+              "completed action" !important;
+            column-gap: 8px !important;
+            row-gap: 5px !important;
+            font-size: 13px !important;
+          }
+
+          .dashboard-name {
+            grid-area: name;
+          }
+
+          .dashboard-time {
+            grid-area: time;
+            font-size: 12px;
+            text-align: right;
+          }
+
+          .dashboard-completed {
+            grid-area: completed;
+          }
+
+          .dashboard-status {
+            grid-area: status;
+          }
+
+          .dashboard-overdue {
+            grid-area: overdue;
+            text-align: right;
+          }
+
+          .dashboard-overdue [data-slot="badge"] {
+            max-width: 100%;
+            white-space: normal;
+            text-align: center;
+          }
+
+          .dashboard-action {
+            grid-area: action;
           }
 
           .dashboard-incident-grid button {
-            width: 100% !important;
-            min-height: 42px !important;
+            width: auto !important;
+            min-height: 36px !important;
+            margin: 0 !important;
+            padding: 6px 10px !important;
           }
 
           .actions-header-grid {
@@ -679,13 +753,33 @@ export default function Home() {
 
           .task-row {
             grid-template-columns: 1fr !important;
-            row-gap: 10px !important;
+            row-gap: 6px !important;
+            padding: 8px !important;
+            margin-bottom: 5px !important;
+            line-height: 1.35 !important;
           }
 
           .task-row select,
           .task-row button {
             width: 100% !important;
-            min-height: 42px !important;
+            min-height: 38px !important;
+            margin: 0 !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+          }
+
+          .decision-summary {
+            padding: 7px !important;
+            margin-bottom: 7px !important;
+            line-height: 1.35 !important;
+          }
+
+          .app-page button {
+            min-height: 36px;
+            margin-top: 2px !important;
+            margin-bottom: 2px !important;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
           }
         }
       `}</style>
@@ -711,6 +805,7 @@ export default function Home() {
       </div>
 
       <Card
+        className="how-to-card"
         style={{
           ...panelStyle,
         }}
@@ -1001,7 +1096,7 @@ export default function Home() {
                       fontSize: 14,
                     }}
                   >
-                    <div style={{ minWidth: 0 }}>
+                    <div className="dashboard-name" style={{ minWidth: 0 }}>
                       <div
                         style={{
                           color: "rgba(0, 0, 0, 0.8)",
@@ -1017,9 +1112,13 @@ export default function Home() {
                         {resident?.name ?? "Unknown resident"}
                       </div>
                     </div>
-                    <div style={{ minWidth: 0 }}>{formatIncidentDate(incident.createdAt)}</div>
-                    <div style={{ minWidth: 0 }}>{completedTasks}/{incident.tasks.length} completed</div>
-                    <div style={{ minWidth: 0 }}>
+                    <div className="dashboard-time" style={{ minWidth: 0 }}>
+                      {formatIncidentDate(incident.createdAt)}
+                    </div>
+                    <div className="dashboard-completed" style={{ minWidth: 0 }}>
+                      {completedTasks}/{incident.tasks.length} completed
+                    </div>
+                    <div className="dashboard-status" style={{ minWidth: 0 }}>
                       <Badge
                         variant={isClosed ? "secondary" : "default"}
                         style={isClosed ? undefined : { backgroundColor: "#dcfce7", color: "#166534" }}
@@ -1027,7 +1126,7 @@ export default function Home() {
                         {isClosed ? `Closed ${formatClosedDate(closedAt)}` : "Open"}
                       </Badge>
                     </div>
-                    <div style={{ minWidth: 0 }}>
+                    <div className="dashboard-overdue" style={{ minWidth: 0 }}>
                       <Badge
                         variant={hasOverdueTasks ? "destructive" : "secondary"}
                         style={
@@ -1046,6 +1145,7 @@ export default function Home() {
                       </Badge>
                     </div>
                     <button
+                      className="dashboard-action"
                       type="button"
                       style={{ ...navyButtonStyle, width: 110 }}
                       onClick={() => setActiveIncidentId(incident.id)}
@@ -1087,6 +1187,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <div
+              className="decision-summary"
               style={{
                 border: "1px solid #e5e7eb",
                 borderRadius: 4,
