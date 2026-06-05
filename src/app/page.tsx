@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -262,7 +261,6 @@ export default function Home() {
     backgroundColor: "#2c5bc9",
     color: "white",
   } as const;
-  const navyButtonClass = "!bg-[#2c5bc9] hover:!bg-[#244cab] !text-white disabled:!bg-[#2c5bc9] disabled:!text-white";
   const panelStyle = {
     border: "none",
     borderRadius: 4,
@@ -566,8 +564,133 @@ export default function Home() {
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: "Arial, sans-serif", backgroundColor: "#f7f3ed" }}>
+    <main
+      className="app-page"
+      style={{ padding: 24, fontFamily: "Arial, sans-serif", backgroundColor: "#f7f3ed" }}
+    >
+      <style>{`
+        .app-page {
+          min-height: 100vh;
+          box-sizing: border-box;
+          overflow-x: hidden;
+        }
+
+        .app-page * {
+          box-sizing: border-box;
+        }
+
+        .app-layout {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 24px;
+          align-items: start;
+        }
+
+        .dashboard-scroll {
+          height: 320px;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding-right: 4px;
+        }
+
+        .mobile-resident-select {
+          display: none;
+        }
+
+        .app-page button,
+        .app-page select {
+          pointer-events: auto;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: rgba(44, 91, 201, 0.18);
+        }
+
+        @media (max-width: 900px) {
+          .app-page {
+            padding: 14px !important;
+          }
+
+          .page-header {
+            align-items: flex-start !important;
+            flex-direction: column !important;
+          }
+
+          .app-layout {
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            gap: 14px !important;
+          }
+
+          .workflow-card,
+          .dashboard-card,
+          .actions-card {
+            width: 100% !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+          }
+
+          .workflow-start-row {
+            align-items: stretch !important;
+            flex-direction: column !important;
+          }
+
+          .resident-select-trigger,
+          .workflow-start-row button {
+            width: 100% !important;
+          }
+
+          .desktop-resident-select {
+            display: none !important;
+          }
+
+          .mobile-resident-select {
+            display: block !important;
+            width: 100% !important;
+            min-height: 42px !important;
+          }
+
+          .dashboard-scroll {
+            height: auto !important;
+            max-height: none !important;
+            overflow-x: hidden !important;
+          }
+
+          .dashboard-header-grid {
+            display: none !important;
+          }
+
+          .dashboard-incident-card {
+            min-width: 0 !important;
+            width: 100% !important;
+          }
+
+          .dashboard-incident-grid {
+            grid-template-columns: 1fr !important;
+            row-gap: 8px !important;
+          }
+
+          .dashboard-incident-grid button {
+            width: 100% !important;
+            min-height: 42px !important;
+          }
+
+          .actions-header-grid {
+            display: none !important;
+          }
+
+          .task-row {
+            grid-template-columns: 1fr !important;
+            row-gap: 10px !important;
+          }
+
+          .task-row select,
+          .task-row button {
+            width: 100% !important;
+            min-height: 42px !important;
+          }
+        }
+      `}</style>
       <div
+        className="page-header"
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -582,9 +705,9 @@ export default function Home() {
             Fall incident workflow prototype
           </p>
         </div>
-        <Button variant="secondary" style={greyButtonStyle} onClick={resetData}>
+        <button type="button" style={greyButtonStyle} onClick={resetData}>
           Reset Data
-        </Button>
+        </button>
       </div>
 
       <Card
@@ -601,13 +724,13 @@ export default function Home() {
           }}
         >
           <CardTitle>How to use</CardTitle>
-          <Button
-            variant="secondary"
+          <button
+            type="button"
             style={{ ...greyButtonStyle, width: 36, padding: "6px 0" }}
             onClick={() => setHowToExpanded(!howToExpanded)}
           >
             {howToExpanded ? "-" : "+"}
-          </Button>
+          </button>
         </CardHeader>
         {howToExpanded && (
           <CardContent>
@@ -623,6 +746,7 @@ export default function Home() {
       </Card>
 
       <div
+        className="app-layout"
         style={{
           display: "flex",
           flexWrap: "wrap",
@@ -631,6 +755,7 @@ export default function Home() {
         }}
       >
         <Card
+          className="workflow-card"
           style={{
             ...panelStyle,
             flex: "1 1 420px",
@@ -641,31 +766,53 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             {!showQuestions && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <Select
-                value={selectedResidentId}
-                onValueChange={setSelectedResidentId}
-              >
-                <SelectTrigger style={{ ...residentSelectStyle, minWidth: 230 }}>
-                  <SelectValue placeholder="Select resident" />
-                </SelectTrigger>
-                <SelectContent>
-                  {residents.map((resident) => (
-                    <SelectItem key={resident.id} value={String(resident.id)}>
-                      {resident.name} - Room {resident.room}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div
+              className="workflow-start-row"
+              style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
+            >
+              <div className="desktop-resident-select">
+                <Select
+                  value={selectedResidentId}
+                  onValueChange={setSelectedResidentId}
+                >
+                  <SelectTrigger
+                    className="resident-select-trigger"
+                    style={{ ...residentSelectStyle, minWidth: 230 }}
+                  >
+                    <SelectValue placeholder="Select resident" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {residents.map((resident) => (
+                      <SelectItem key={resident.id} value={String(resident.id)}>
+                        {resident.name} - Room {resident.room}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Button
+              <select
+                className="mobile-resident-select"
+                value={selectedResidentId}
+                style={{ ...residentSelectStyle, minWidth: 0 }}
+                onChange={(event) => setSelectedResidentId(event.target.value)}
+              >
+                <option value="">Select resident</option>
+                {residents.map((resident) => (
+                  <option key={resident.id} value={String(resident.id)}>
+                    {resident.name} - Room {resident.room}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
                 onClick={startFallWorkflow}
                 disabled={selectedResidentId === ""}
-                className={navyButtonClass}
                 style={navyButtonStyle}
               >
                 New Incident
-              </Button>
+              </button>
             </div>
             )}
 
@@ -676,10 +823,10 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>1) Select incident category</p>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 1")}>Category 1</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 2")}>Category 2</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 3")}>Category 3</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 4")}>Category 4</Button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 1")}>Category 1</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 2")}>Category 2</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 3")}>Category 3</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("category", "Category 4")}>Category 4</button>
                 {answers.category !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.category}
@@ -691,8 +838,8 @@ export default function Home() {
                 <p>
                   2) Was there a head strike, suspected head injury, unwitnessed fall or is the resident on anticoagulant or antiplatelet therapy?
                 </p>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q2", "yes")}>YES</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q2", "no")}>NO</Button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q2", "yes")}>YES</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q2", "no")}>NO</button>
                 {answers.q2 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q2 === "yes" ? "YES" : "NO"}
@@ -702,8 +849,8 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>3) Has this been logged in the incident management system?</p>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q3", "yes")}>YES</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q3", "no")}>NO</Button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q3", "yes")}>YES</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q3", "no")}>NO</button>
                 {answers.q3 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q3 === "yes" ? "YES" : "NO"}
@@ -713,8 +860,8 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>4) Is a care conference required?</p>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q4", "yes")}>YES</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q4", "no")}>NO</Button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q4", "yes")}>YES</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q4", "no")}>NO</button>
                 {answers.q4 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q4 === "yes" ? "YES" : "NO"}
@@ -724,8 +871,8 @@ export default function Home() {
 
               <div style={questionStyle}>
                 <p>5) Is a wound assessment required?</p>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q5", "yes")}>YES</Button>
-                <Button variant="secondary" style={greyButtonStyle} onClick={() => answerQuestion("q5", "no")}>NO</Button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q5", "yes")}>YES</button>
+                <button type="button" style={greyButtonStyle} onClick={() => answerQuestion("q5", "no")}>NO</button>
                 {answers.q5 !== "" && (
                   <span style={{ color: "green", fontWeight: "bold" }}>
                     {" "}Selected: {answers.q5 === "yes" ? "YES" : "NO"}
@@ -733,7 +880,8 @@ export default function Home() {
                 )}
               </div>
 
-              <Button
+              <button
+                type="button"
                 onClick={generateTasks}
                 disabled={
                   answers.category === "" ||
@@ -755,13 +903,16 @@ export default function Home() {
                 }}
               >
                 Generate Tasks
-              </Button>
+              </button>
             </div>
             )}
           </CardContent>
         </Card>
 
-        <Card style={{ ...panelStyle, flex: "2 1 760px", overflow: "hidden" }}>
+        <Card
+          className="dashboard-card"
+          style={{ ...panelStyle, flex: "2 1 760px", overflow: "hidden" }}
+        >
           <CardHeader>
             <CardTitle>Incident Dashboard</CardTitle>
           </CardHeader>
@@ -783,8 +934,12 @@ export default function Home() {
             </div>
             {incidents.length === 0 && <p>No incidents yet.</p>}
 
-            <div style={{ height: 320, overflowY: "auto", overflowX: "hidden", paddingRight: 4 }}>
             <div
+              className="dashboard-scroll"
+              style={{ height: 320, overflowY: "auto", overflowX: "hidden", paddingRight: 4 }}
+            >
+            <div
+              className="dashboard-header-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: dashboardGridColumns,
@@ -825,6 +980,7 @@ export default function Home() {
 
               return (
                 <div
+                  className="dashboard-incident-card"
                   key={incident.id}
                   style={{
                     ...cardStyle,
@@ -836,6 +992,7 @@ export default function Home() {
                   }}
                 >
                   <div
+                    className="dashboard-incident-grid"
                     style={{
                       display: "grid",
                       gridTemplateColumns: dashboardGridColumns,
@@ -888,13 +1045,13 @@ export default function Home() {
                         : "No overdue tasks"}
                       </Badge>
                     </div>
-                    <Button
-                      className={navyButtonClass}
+                    <button
+                      type="button"
                       style={{ ...navyButtonStyle, width: 110 }}
                       onClick={() => setActiveIncidentId(incident.id)}
                     >
                       View Tasks
-                    </Button>
+                    </button>
                   </div>
                 </div>
               );
@@ -905,7 +1062,7 @@ export default function Home() {
       </div>
 
       {activeIncident && activeIncident.tasks.length > 0 && (
-        <Card style={{ ...panelStyle, marginTop: 24 }}>
+        <Card className="actions-card" style={{ ...panelStyle, marginTop: 24 }}>
           <CardHeader>
             <CardTitle>
               <span
@@ -945,6 +1102,7 @@ export default function Home() {
               {activeIncident.decisionSummary.wound || "Wound assessment not required"}
             </div>
           <div
+            className="actions-header-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "minmax(260px, 2fr) minmax(180px, 1fr) minmax(220px, 1fr) 140px",
@@ -964,6 +1122,7 @@ export default function Home() {
           <div>
             {activeIncident.tasks.map((task) => (
               <div
+                className="task-row"
                 key={task.id}
                 style={{
                   display: "grid",
@@ -1044,13 +1203,13 @@ export default function Home() {
                   )}
                 </div>
 
-                <Button
-                  className={task.completed ? undefined : navyButtonClass}
+                <button
+                  type="button"
                   style={task.completed ? greyButtonStyle : navyButtonStyle}
                   onClick={() => toggleTask(activeIncident.id, task.id, Date.now())}
                 >
                   {task.completed ? "Undo" : "Mark complete"}
-                </Button>
+                </button>
               </div>
             ))}
           </div>
