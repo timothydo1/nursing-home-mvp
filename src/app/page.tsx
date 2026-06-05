@@ -854,10 +854,13 @@ export default function Home() {
           style={{
             ...panelStyle,
             flex: "1 1 420px",
+            backgroundColor: "#f8f9fa",
           }}
         >
           <CardHeader>
-            <CardTitle>Start New Fall Workflow</CardTitle>
+            <CardTitle style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>
+              ➕ Start New Fall Workflow
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {!showQuestions && (
@@ -1006,10 +1009,17 @@ export default function Home() {
 
         <Card
           className="dashboard-card"
-          style={{ ...panelStyle, flex: "2 1 760px", overflow: "hidden" }}
+          style={{
+            ...panelStyle,
+            flex: "2 1 760px",
+            overflow: "hidden",
+            backgroundColor: "#eef3f8",
+          }}
         >
           <CardHeader>
-            <CardTitle>Incident Dashboard</CardTitle>
+            <CardTitle style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>
+              📋 Incident Dashboard
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div
@@ -1080,7 +1090,7 @@ export default function Home() {
                   style={{
                     ...cardStyle,
                     boxSizing: "border-box",
-                    backgroundColor: isClosed ? "#f3f4f6" : hasOverdueTasks ? "#fff1f2" : "white",
+                    backgroundColor: "white",
                     opacity: isClosed ? 0.75 : 1,
                     border: `${isSelected ? 3 : 1}px solid ${incidentBorderColor}`,
                     minWidth: 855,
@@ -1162,9 +1172,15 @@ export default function Home() {
       </div>
 
       {activeIncident && activeIncident.tasks.length > 0 && (
-        <Card className="actions-card" style={{ ...panelStyle, marginTop: 24 }}>
+        <Card
+          className="actions-card"
+          style={{ ...panelStyle, marginTop: 24, backgroundColor: "#fffdf8" }}
+        >
           <CardHeader>
-            <CardTitle>
+            <CardTitle style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
+              ✅ Actions
+            </CardTitle>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>
               <span
                 style={{
                   backgroundColor: "#eef0f2",
@@ -1180,7 +1196,7 @@ export default function Home() {
               </span>
               <span style={{ color: "#6b7280", marginRight: 8 }}>·</span>
               {getResidentName(activeIncident.residentId)}
-            </CardTitle>
+            </div>
             <div style={{ marginTop: 4, color: "#555" }}>
               Incident date/time: {formatIncidentDate(activeIncident.createdAt)}
             </div>
